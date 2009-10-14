@@ -5,10 +5,6 @@
  * @description Class for performing unit tests
  */
 class Tester {
-	public function setSilent($silent=true) {/*{{{*/
-		// set true if you don't want a test-by-test message
-		$this->_silent = (bool)$silent;
-	}/*}}}*/
 	public function setGroup($label) {/*{{{*/
 		// starts a new testing group
 		// use this to separate tests for different modules, scripts, classes, etc.
@@ -115,6 +111,10 @@ class Tester {
 		$this->test('List '.$name.': '.$this->_listCounters[$name],$value,$this->_lists[$name][$this->_listCounters[$name]]);
 		$this->_listCounters[$name]++;
 	}/*}}}*/
+	public function setShowTests($show=true) {/*{{{*/
+		// set true if you don't want a test-by-test message
+		$this->_silent = !((bool)$show);
+	}/*}}}*/
 	public function setShowTotals($show=true) {/*{{{*/
 		$this->_showTotals = $show;
 	}/*}}}*/
@@ -145,10 +145,11 @@ class Tester {
 		require($file);
 	}/*}}}*/
 	private function __construct() {/*{{{*/
-		$this->_showTotals = true;
-		$this->_showFailing = true;
-		$this->_showPassing = false;
-		$this->_showContents = true;
+		$this->setShowTests();
+		$this->setShowTotals();
+		$this->setShowFailing();
+		$this->setShowPassing(false);
+		$this->setShowContents();
 	}
 	public static function singleton() {
 		if (!self::$_singleton) {
@@ -205,13 +206,13 @@ class Tester {
 	private $_failures = array();
 	private $_startTime;
 	private $_endTime;
-	private $_silent = false;
 	private $_open = false;
 	private $_contents = '';
 	private $_environment = array();
 	private $_testFiles = array();
 	private $_lists = array();
 	private $_listCounters = array();
+	private $_silent;
 	private $_showTotals;
 	private $_showFailing;
 	private $_showPassing;
