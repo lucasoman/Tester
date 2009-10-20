@@ -67,6 +67,11 @@ class Tester {
 			$time = number_format($this->_endTime - $this->_startTime,2);
 			$string .= "{$passes}/{$this->_testCount} ({$percent}%) passed in {$time} seconds\n";
 		}
+		if (!empty($this->_logFile)) {
+			$logFile = fopen($this->_logFile,$this->_logType);
+			fwrite($logFile,$string);
+			fclose($logFile);
+		}
 		$this->openBuffer();
 		return $string;
 	}/*}}}*/
@@ -127,6 +132,10 @@ class Tester {
 	public function setShowContents($show=true) {/*{{{*/
 		$this->_showContents = $show;
 	}/*}}}*/
+	public function setLogFile($file,$overwrite=false) {
+		$this->_logFile = $file;
+		$this->_logType = ($overwrite ? 'w' : 'a');
+	}
 	private function open() {/*{{{*/
 		// opens testing
 		// only necessary if you're printing debugging info in your tests
@@ -219,6 +228,8 @@ class Tester {
 	private $_showContents;
 	private $_group;
 	private $_groupPrefix;
+	private $_logFile;
+	private $_logType;
 	private static $_singleton;
 
 	const TESTSKIP = 0;
