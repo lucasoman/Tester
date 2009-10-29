@@ -1,11 +1,34 @@
 <?php
 
 /**
+ * Class for performing unit tests.
+ *
+ * Example usage:
+ *
+ * $tester = Tester::singleton();
+ * $tester->runTests(array(
+ * 			array('tests/testOne.php',Tester::TESTRUN),
+ * 			array('tests/testTwo.php',Tester::TESTSKIP),
+ * 			));
+ * 
+ * $tester->setShowTests();
+ * $tester->setShowTotals();
+ * $tester->setShowFailing();
+ * $tester->setShowPassing(false);
+ * $tester->setShowContents();
+ * print($tester->getResults());
+ *
  * @author Lucas Oman (me@lucasoman.com)
- * @description Class for performing unit tests
  */
 class Tester {
-	public function setGroup($label) {/*{{{*/
+	/**
+	 * ends previous group and begins a new one with name
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @param string label or name for the group
+	 * @return null
+	 */
+	public function setGroup($label) {
 		// starts a new testing group
 		// use this to separate tests for different modules, scripts, classes, etc.
 		$this->closeBuffer();
@@ -20,11 +43,31 @@ class Tester {
 		}
 		if (!$this->_silent) print("* {$this->_group}\n");
 		$this->openBuffer();
-	}/*}}}*/
+	}
+
+	/**
+	 * sets the group's prefix name
+	 * This is handy when repeating the same test files in different
+	 * environments.
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @param string prefix label
+	 * @return null
+	 */
 	public function setGroupPrefix($prefix) {
 		$this->_groupPrefix = $prefix;
 	}
-	public function test($note,$is,$shouldBe=true) {/*{{{*/
+
+	/**
+	 * execute a test
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @param string note or name of the test
+	 * @param mixed result of the test
+	 * @param optional value that result should be
+	 * @return null
+	 */
+	public function test($note,$is,$shouldBe=true) {
 		// does the dirty work
 		// note - description of test
 		// is - actual result of tested code
@@ -42,8 +85,15 @@ class Tester {
 		}
 		$this->_endTime = microtime(true);
 		$this->openBuffer();
-	}/*}}}*/
-	public function getResults() {/*{{{*/
+	}
+
+	/**
+	 * gets a purdy report of test results
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @return null
+	 */
+	public function getResults() {
 		$totals = $this->_showTotals;
 		$failing = $this->_showFailing;
 		$passing = $this->_showPassing;
@@ -74,17 +124,48 @@ class Tester {
 		}
 		$this->openBuffer();
 		return $string;
-	}/*}}}*/
-	public function setEnv($vars) {/*{{{*/
+	}
+
+	/**
+	 * sets the variables for the testing environment
+	 * This environment is reset for each test file passed into tester.
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @param array of vars; exported as varname=>varvalue
+	 * @return null
+	 */
+	public function setEnv($vars) {
 		// sets the environment for the tests
 		// this array will be extracted for every test
 		$this->_environment = $vars;
-	}/*}}}*/
-	public function addEnv($vars) {/*{{{*/
+	}
+	
+	/**
+	 * adds more environment vars to current environment
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @param array of vars
+	 * @return null
+	 */
+	public function addEnv($vars) {
 		// adds vars to the environment
 		$this->_environment = array_merge($this->_environment,$vars);
-	}/*}}}*/
-	public function runTests($files) {/*{{{*/
+	}
+
+	/**
+	 * runs test files
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @param array of test files. Format:
+	 * array(
+	 *   array('testfile.php',testoption),
+	 *   array('testfile2.php',testoption),
+	 *   ...
+	 * )
+	 * testoption is one of TESTRUN, TESTONLY, TESTSKIP
+	 * @return null
+	 */
+	public function runTests($files) {
 		$this->open();
 		$onlyExists = false;
 		foreach ($files as $file) {
@@ -103,83 +184,143 @@ class Tester {
 			}
 		}
 		$this->close();
-	}/*}}}*/
-	public function setList($name,$list) {/*{{{*/
+	}
+
+	public function setList($name,$list) {
 		$this->_lists[$name] = $list;
 		$this->resetListCounter($name);
-	}/*}}}*/
-	public function resetListCounter($name) {/*{{{*/
+	}
+
+	public function resetListCounter($name) {
 		$this->_listCounters[$name] = 0;
-	}/*}}}*/
-	public function testList($name,$value) {/*{{{*/
+	}
+
+	public function testList($name,$value) {
 		print("Is:\n".$value."\nShould be:\n".$this->_lists[$name][$this->_listCounters[$name]]);
 		$this->test('List '.$name.': '.$this->_listCounters[$name],$value,$this->_lists[$name][$this->_listCounters[$name]]);
 		$this->_listCounters[$name]++;
-	}/*}}}*/
-	public function setShowTests($show=true) {/*{{{*/
+	}
+
+	/**
+	 * show tests as they're executed?
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @param bool show tests?
+	 * @return null
+	 */
+	public function setShowTests($show=true) {
 		// set true if you don't want a test-by-test message
 		$this->_silent = !((bool)$show);
-	}/*}}}*/
-	public function setShowTotals($show=true) {/*{{{*/
+	}
+
+	/**
+	 * show total passes/fails?
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @param bool show totals?
+	 * @return null
+	 */
+	public function setShowTotals($show=true) {
 		$this->_showTotals = $show;
-	}/*}}}*/
-	public function setShowFailing($show=true) {/*{{{*/
+	}
+
+	/**
+	 * show all failing tests?
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @param bool show failing?
+	 * @return null
+	 */
+	public function setShowFailing($show=true) {
 		$this->_showFailing = $show;
-	}/*}}}*/
-	public function setShowPassing($show=true) {/*{{{*/
+	}
+
+	/**
+	 * show all passing tests?
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @param bool show passing?
+	 * @return null
+	 */
+	public function setShowPassing($show=true) {
 		$this->_showPassing = $show;
-	}/*}}}*/
-	public function setShowContents($show=true) {/*{{{*/
+	}
+
+	/**
+	 * show data printed by executed code?
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @param bool show data?
+	 * @return null
+	 */
+	public function setShowContents($show=true) {
 		$this->_showContents = $show;
-	}/*}}}*/
+	}
+
+	/**
+	 * sets logging options
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @param string filename
+	 * @param bool overwrite if existing?
+	 * @return null
+	 */
 	public function setLogFile($file,$overwrite=false) {
 		$this->_logFile = $file;
 		$this->_logType = ($overwrite ? 'w' : 'a');
 	}
-	private function open() {/*{{{*/
+
+	private function open() {
 		// opens testing
 		// only necessary if you're printing debugging info in your tests
 		$this->_open = true;
 		ob_start();
-	}/*}}}*/
-	private function close() {/*{{{*/
+	}
+
+	private function close() {
 		// closes testing
 		// only necessary if you open()ed testing
 		$this->closeBuffer();
 		$this->_open = false;
-	}/*}}}*/
-	private function runTest($file) {/*{{{*/
+	}
+
+	private function runTest($file) {
 		extract($this->_environment);
 		$tester = $this;
 		require($file);
-	}/*}}}*/
-	private function __construct() {/*{{{*/
+	}
+
+	private function __construct() {
 		$this->setShowTests();
 		$this->setShowTotals();
 		$this->setShowFailing();
 		$this->setShowPassing(false);
 		$this->setShowContents();
 	}
+
 	public static function singleton() {
 		if (!self::$_singleton) {
 			$class = __CLASS__;
 			self::$_singleton = new $class;
 		}
 		return self::$_singleton;
-	}/*}}}*/
-	private function closeBuffer() {/*{{{*/
+	}
+
+	private function closeBuffer() {
 		if ($this->_open) {
 			$contents = ob_get_contents();
 			ob_end_clean();
 			if (!empty($contents)) $this->_contents .= "\n------------\n\n$contents\n";
 		}
-	}/*}}}*/
-	private function openBuffer() {/*{{{*/
+	}
+
+	private function openBuffer() {
 		if ($this->_open) {
 			ob_start();
 		}
-	}/*}}}*/
-	private function listNotes($groups) {/*{{{*/
+	}
+
+	private function listNotes($groups) {
 		$string = '';
 		$total = 0;
 		foreach ($groups as $group=>$notes) {
@@ -205,10 +346,11 @@ class Tester {
 			}
 		}
 		return array($string,$total);
-	}/*}}}*/
-	private function getContents() {/*{{{*/
+	}
+
+	private function getContents() {
 		return "Printed Data{$this->_contents}\n\n";
-	}/*}}}*/
+	}
 
 	private $_testCount = 0;
 	private $_passes = array();
