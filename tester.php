@@ -382,7 +382,7 @@ class Tester {
 	}
 
 	private function getContents() {
-		return "Printed Data\n-------------\n{$this->_contents}\n\n";
+		return "Printed Data{$this->_contents}\n\n";
 	}
 
 	private function badColorize($text) {
