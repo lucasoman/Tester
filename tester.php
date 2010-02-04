@@ -177,7 +177,6 @@ class Tester {
 	 * @return null
 	 */
 	public function runTests($files) {
-		$this->open();
 		$this->_startTime = microtime(true);
 		if (!$this->_silent) print("\nStarting tests...\n");
 		$onlyExists = false;
