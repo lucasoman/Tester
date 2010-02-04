@@ -18,6 +18,9 @@
  * $tester->setShowContents();
  * print($tester->getResults());
  *
+ * Get the latest from:
+ * http://github.com/lucasoman/Tester
+ *
  * @author Lucas Oman (me@lucasoman.com)
  */
 class Tester {
@@ -29,15 +32,9 @@ class Tester {
 	 * @return null
 	 */
 	public function setGroup($label) {
-		// starts a new testing group
-		// use this to separate tests for different modules, scripts, classes, etc.
 		$this->closeBuffer();
-		if (empty($this->_startTime)) {
-			$this->_startTime = microtime(true);
-			if (!$this->_silent) print("\nStarting tests...\n");
-		}
 		$this->_group = (!empty($this->_groupPrefix) ? $this->_groupPrefix.': ' : '').$label;
-		if (isset($this->_passes[$this->_group])) {
+		if (!isset($this->_passes[$this->_group])) {
 			$this->_passes[$this->_group] = array();
 			$this->_failures[$this->_group] = array();
 		}
@@ -68,20 +65,34 @@ class Tester {
 	 * @return null
 	 */
 	public function test($note,$is,$shouldBe=true) {
-		// does the dirty work
-		// note - description of test
-		// is - actual result of tested code
-		// shouldbe - what the result should be
 		$this->closeBuffer();
 		$this->_testCount++;
-		$return = ($is === $shouldBe);
+		$return = null;
+		// if it's a closure, then we're looking for an
+		// exception. Otherwise, simple comparison.
+		if ($is instanceof Closure) {
+			try {
+				$is();
+			} catch (Exception $e) {
+				if (get_class($e) == $shouldBe) {
+					$return = true;
+				} else {
+					$return = false;
+				}
+			}
+			if ($return === null) {
+				$return = false;
+			}
+		} else {
+			$return = ($is === $shouldBe);
+		}
 		$count = str_pad($this->_testCount,3,'0',STR_PAD_LEFT);
 		if ($return) {
 			$this->_passes[$this->_group][$this->_testCount] = $note;
-			if (!$this->_silent) print($count.": PASS - ".$note."\n");
+			if (!$this->_silent) print($count.": ".$this->goodColorize('PASS')." - ".$note."\n");
 		} else {
 			$this->_failures[$this->_group][$this->_testCount] = array('note'=>$note,'is'=>$is,'shouldbe'=>$shouldBe);
-			if (!$this->_silent) print($count.": FAIL - ".$note."\n");
+			if (!$this->_silent) print($count.": ".$this->badColorize('FAIL')." - ".$note."\n");
 		}
 		$this->_endTime = microtime(true);
 		$this->openBuffer();
@@ -167,6 +178,8 @@ class Tester {
 	 */
 	public function runTests($files) {
 		$this->open();
+		$this->_startTime = microtime(true);
+		if (!$this->_silent) print("\nStarting tests...\n");
 		$onlyExists = false;
 		foreach ($files as $file) {
 			if ($file[1] === self::TESTONLY) {
@@ -186,6 +199,14 @@ class Tester {
 		$this->close();
 	}
 
+	/**
+	 * The following three methods allow setting up a list of
+	 * tests. Each result can then be pushed by other code and
+	 * compared to its respective expected result.
+	 *
+	 * The usefulness and design of this feature are both
+	 * questionable. Need to rethink.
+	 */
 	public function setList($name,$list) {
 		$this->_lists[$name] = $list;
 		$this->resetListCounter($name);
@@ -258,6 +279,17 @@ class Tester {
 	}
 
 	/**
+	 * should we show purdy colorful tests?
+	 *
+	 * @author Lucas Oman <lucas.oman@bookit.com>
+	 * @param bool show color?
+	 * @return null
+	 */
+	public function setShowColor($show=true) {
+		$this->_setShowColor = $show;
+	}
+
+	/**
 	 * sets logging options
 	 *
 	 * @author Lucas Oman <me@lucasoman.com>
@@ -296,6 +328,7 @@ class Tester {
 		$this->setShowFailing();
 		$this->setShowPassing(false);
 		$this->setShowContents();
+		$this->setShowColor();
 	}
 
 	public static function singleton() {
@@ -349,7 +382,21 @@ class Tester {
 	}
 
 	private function getContents() {
-		return "Printed Data{$this->_contents}\n\n";
+		return "Printed Data\n-------------\n{$this->_contents}\n\n";
+	}
+
+	private function badColorize($text) {
+		if ($this->_showColor) {
+			$text = chr(27).'[31m'.$text.chr(27).'[0m';
+		}
+		return $text;
+	}
+
+	private function goodColorize($text) {
+		if ($this->_showColor) {
+			$text = chr(27).'[32m'.$text.chr(27).'[0m';
+		}
+		return $text;
 	}
 
 	private $_testCount = 0;
@@ -368,6 +415,7 @@ class Tester {
 	private $_showFailing;
 	private $_showPassing;
 	private $_showContents;
+	private $_showColor;
 	private $_group;
 	private $_groupPrefix;
 	private $_logFile;
