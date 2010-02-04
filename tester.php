@@ -285,7 +285,7 @@ class Tester {
 	 * @return null
 	 */
 	public function setShowColor($show=true) {
-		$this->_setShowColor = $show;
+		$this->_showColor = $show;
 	}
 
 	/**
