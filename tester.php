@@ -315,7 +315,50 @@ class Tester {
 		$this->_open = false;
 	}
 
-	private function runTest($file) {
+	/**
+	 * Run tests in a file or dir
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @param string file or dir
+	 * @return null
+	 */
+	private function runTest($fileOrDir) {
+		if (is_dir($fileOrDir)) {
+			$fixedDir = $fileOrDir.(substr($fileOrDir,-1) == '/' ? '' : '/');
+			$this->runTestDir($fileOrDir,$fixedDir);
+		} elseif (is_file($fileOrDir)) {
+			$this->runTestFile($fileOrDir);
+		}
+	}
+
+	/**
+	 * run tests recursively in dir
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @param string dir
+	 * @return null
+	 */
+	private function runTestDir($dir,$path) {
+		if (!in_array($dir,array('.','..'))) {
+			$dir = opendir($dir);
+			while ($file = readdir($dir)) {
+				if (is_dir($file)) {
+					$this->runTestDir($file,$path.$dir);
+				} else {
+					$this->runTestFile($path.$file);
+				}
+			}
+		}
+	}
+
+	/**
+	 * run tests in file
+	 *
+	 * @author Lucas Oman <me@lucasoman.com>
+	 * @param string file
+	 * @return null
+	 */
+	private function runTestFile($file) {
 		extract($this->_environment);
 		$tester = $this;
 		require($file);
